@@ -63,9 +63,15 @@ class BasicAuth(object):
         :returns: `True` if the username and password combination was correct,
             and `False` otherwise.
         """
+        return self.check_username(username) and self.check_password_plain(password)
+
+    def check_username(self, username):
         correct_username = current_app.config['BASIC_AUTH_USERNAME']
+        return username == correct_username
+
+    def check_password_plain(self, password):
         correct_password = current_app.config['BASIC_AUTH_PASSWORD']
-        return username == correct_username and password == correct_password
+        return password == correct_password
 
     def authenticate(self):
         """
