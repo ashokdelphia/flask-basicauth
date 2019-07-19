@@ -83,6 +83,7 @@ A list of configuration keys currently understood by the extension:
 ``BASIC_AUTH_PASSWORD_HASH`` (and optional ``BASIC_AUTH_PASSWORD_HASH_SALT``, ``BASIC_AUTH_PASSWORD_HASH_ALGORITHM``, ``BASIC_AUTH_PASSWORD_HASH_ROUNDS``)
     A PBKDF2-based hash of the password.
     You can optionally set a salt, algorithm and number of rounds. If not, these default to no salt, SHA-512 and 100,000 rounds.
+    To generate a hash, please use the ``generate_password_hash.py`` script in the base of the repository.
 
 API reference
 -------------
