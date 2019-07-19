@@ -80,6 +80,9 @@ A list of configuration keys currently understood by the extension:
     You can override :meth:`BasicAuth.check_credentials <flask.ext.basicauth.BasicAuth.check_credentials>`,
     if you need a different authentication logic for your application.
 
+``BASIC_AUTH_PASSWORD_HASH`` (and optional ``BASIC_AUTH_PASSWORD_HASH_SALT``, ``BASIC_AUTH_PASSWORD_HASH_ALGORITHM``, ``BASIC_AUTH_PASSWORD_HASH_ROUNDS``)
+    A PBKDF2-based hash of the password.
+    You can optionally set a salt, algorithm and number of rounds. If not, these default to no salt, SHA-512 and 100,000 rounds.
 
 API reference
 -------------

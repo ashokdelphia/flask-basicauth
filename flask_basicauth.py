@@ -10,10 +10,13 @@
     :license: BSD, see LICENSE for more details.
 """
 import base64
+import binascii
+import hashlib
 from functools import wraps
 
 from flask import current_app, request, Response
 
+from hmac import compare_digest
 
 __version__ = '0.2.0'
 
@@ -58,12 +61,19 @@ class BasicAuth(object):
         ``BASIC_AUTH_USERNAME`` and ``BASIC_AUTH_PASSWORD``
         configuration variables.
 
+        If ``BASIC_AUTH_PASSWORD_HASH`` is set, compares the given username
+        using hashes, using PBDKF2. Optional parameters control the
+        algorithm, salt and number of rounds.
+
         :param username: a username provided by the client
         :param password: a password provided by the client
         :returns: `True` if the username and password combination was correct,
             and `False` otherwise.
         """
-        return self.check_username(username) and self.check_password_plain(password)
+        if 'BASIC_AUTH_PASSWORD_HASH' in current_app.config:
+            return self.check_username(username) and self.check_password_hashed(password)
+        else:
+            return self.check_username(username) and self.check_password_plain(password)
 
     def check_username(self, username):
         correct_username = current_app.config['BASIC_AUTH_USERNAME']
@@ -72,6 +82,18 @@ class BasicAuth(object):
     def check_password_plain(self, password):
         correct_password = current_app.config['BASIC_AUTH_PASSWORD']
         return password == correct_password
+
+    def check_password_hashed(self, password):
+        # Avoid denial of service by supplying very long passwords
+        if len(password) > 1024:
+            return False
+        salt = current_app.config.get('BASIC_AUTH_PASSWORD_HASH_SALT', '')
+        algo = current_app.config.get('BASIC_AUTH_PASSWORD_HASH_ALGORITHM', 'sha512')
+        rounds = current_app.config.get('BASIC_AUTH_PASSWORD_HASH_ROUNDS', 100000)
+        correct_hash = current_app.config['BASIC_AUTH_PASSWORD_HASH']
+        provided_password = password.encode('utf-8')
+        provided_hash = hashlib.pbkdf2_hmac(algo, provided_password, salt.encode('ascii'), rounds)
+        return compare_digest(provided_hash, binascii.unhexlify(correct_hash))
 
     def authenticate(self):
         """

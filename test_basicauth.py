@@ -35,6 +35,13 @@ class BasicAuthTestCase(unittest.TestCase):
         auth = base64.b64encode(username + b':' + password)
         return {'Authorization': b'Basic ' + auth}
 
+    def use_hashes(self):
+        self.app.config['BASIC_AUTH_PASSWORD'] = None
+        # The hash of 'matrix1'
+        self.app.config['BASIC_AUTH_PASSWORD_HASH'] = '7e0bf8315651d470186ca40e5430fbf499251fbb785fa8ae0bddc328a41db1ec798417b250d51befd26035d952bdb034ca8a24b205b933d0db3d5cc95066c7a4'
+        self.app.config['BASIC_AUTH_PASSWORD_HASH_SALT'] = 'abcd1234'
+        self.app.config['BASIC_AUTH_PASSWORD_HASH_ALGORITHM'] = 'sha512'
+
     def test_sets_default_values_for_configuration(self):
         self.assertEqual(self.app.config['BASIC_AUTH_REALM'], '')
         self.assertEqual(self.app.config['BASIC_AUTH_FORCE'], False)
@@ -76,6 +83,20 @@ class BasicAuthTestCase(unittest.TestCase):
             )
 
     def test_check_credentials_with_incorrect_credentials(self):
+        with self.app.test_request_context():
+            self.assertFalse(
+                self.basic_auth.check_credentials('john', 'rambo')
+            )
+
+    def test_check_credentials_using_hashes_with_correct_credentials(self):
+        self.use_hashes()
+        with self.app.test_request_context():
+            self.assertTrue(
+                self.basic_auth.check_credentials('john', 'matrix1')
+            )
+
+    def test_check_credentials_using_hashes_with_incorrect_credentials(self):
+        self.use_hashes()
         with self.app.test_request_context():
             self.assertFalse(
                 self.basic_auth.check_credentials('john', 'rambo')
